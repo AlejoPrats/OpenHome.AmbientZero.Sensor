@@ -10,18 +10,18 @@ This project is written in modern C++ and follows a modular architecture designe
 
 ## ✨ Features
 
-- � Wi‑Fi connectivity with automatic reconnection flow  
-- �️ AHTx temperature & humidity sensor driver  
-- � Battery monitoring using an optocoupler‑isolated ADC path  
-- � HTTP client with configurable endpoints  
-- � Sleep & power‑management system for low‑power operation  
-- � Stateless request/response flow  
-- � Modular architecture (drivers, services, domain flows, system layer)  
-- �️ Custom lwIP configuration for Pico W stability  
+- 📡 Wi‑Fi connectivity with automatic reconnection flow  
+- 🌡️ AHTx temperature & humidity sensor driver  
+- 🔋 Battery monitoring using an optocoupler‑isolated ADC path  
+- 🌐 HTTP client with configurable endpoints  
+- 💤 Sleep & power‑management system for low‑power operation  
+- 🔄 Stateless request/response flow  
+- 🧩 Modular architecture (drivers, services, domain flows, system layer)  
+- 🛠️ Custom lwIP configuration for Pico W stability  
 
 ---
 
-## � Project Structure
+## 📂 Project Structure
 
     include/ 		# Public headers 
     src/ 
@@ -39,7 +39,7 @@ This layout keeps hardware, logic, and protocol concerns cleanly separated.
 
 ---
 
-## � Getting Started
+## 🚀 Getting Started
 
 ### Requirements
 - Raspberry Pi Pico W  
@@ -82,11 +82,11 @@ Device configuration is handled through: cmakelists.txt in this section
         MAX_WATCHDOG_CHUNK=8000
     )
 
-## � Testing
+## 🧪 Testing
 
 This project is tested manually on the physical device. There are no automated tests at this stage.
 
-## � License
+## 📜 License
 
 This project is licensed under the **GNU General Public License v3.0 (GPLv3)**. See the `LICENSE` file for full details.
 
