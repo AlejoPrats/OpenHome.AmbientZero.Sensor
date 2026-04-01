@@ -1,5 +1,5 @@
-#include "server_response.hpp"
-#include "json_parser.hpp"
+#include "protocol/server_response.hpp"
+#include "protocol/json_parser.hpp"
 #include <string.h>
 #include "stdio.h"
 

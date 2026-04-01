@@ -1,4 +1,4 @@
-#include "device_config.hpp"
+#include "config/device_config.hpp"
 
 #include "pico/stdlib.h"
 #include "hardware/flash.h"
@@ -6,9 +6,17 @@
 #include <string.h>
 #include <stdio.h>
 
-#define FLASH_TARGET_OFFSET (2 * 1024 * 1024 - 4096)  // Last 4KB sector
+// ---------------------------------------------------------
+// Flash storage region (allocated by linker)
+// ---------------------------------------------------------
 
-static const uint8_t* flash_ptr = (const uint8_t*)(XIP_BASE + FLASH_TARGET_OFFSET);
+// This array is placed in the .flash_config section defined in flash_config.ld
+// The linker guarantees this region exists in flash and is safe to read/write.
+__attribute__((section(".flash_config")))
+uint8_t flash_storage[FLASH_SECTOR_SIZE];
+
+// Pointer to the config region in flash
+static const uint8_t* flash_ptr = flash_storage;
 
 // ---------------------------------------------------------
 // CRC32 (simple, robust, no dependencies)
@@ -24,22 +32,42 @@ static uint32_t crc32(const uint8_t* data, size_t len) {
 }
 
 // ---------------------------------------------------------
+// Detect if flash region is fully erased (all 0xFF)
+// ---------------------------------------------------------
+bool is_flash_erased(const DeviceConfig* stored) {
+    const uint8_t* ptr = reinterpret_cast<const uint8_t*>(stored);
+
+    for (size_t i = 0; i < sizeof(DeviceConfig); i++) {
+        if (ptr[i] != 0xFF) {
+            return false; // Not erased
+        }
+    }
+    return true; // Entire struct is erased
+}
+
+// ---------------------------------------------------------
 // Load config from flash
 // ---------------------------------------------------------
 bool load_config(DeviceConfig& out) {
     const DeviceConfig* stored = (const DeviceConfig*)flash_ptr;
 
-    // Flash defaults to 0xFF when erased
-    if (stored->id[0] == (char)0xFF)
-        return false;
+    // Case 1: Flash is erased → create empty config and return true
+    if (is_flash_erased(stored)) {
+        memset(&out, 0, sizeof(out));
+        out.crc = crc32((uint8_t*)&out, sizeof(DeviceConfig) - sizeof(uint32_t));
+        save_config(out);
+        return true;
+    }
 
-    // Validate CRC
+    // Case 2: Flash is not erased → validate CRC
     uint32_t expected = crc32((const uint8_t*)stored,
                               sizeof(DeviceConfig) - sizeof(uint32_t));
 
-    if (expected != stored->crc)
-        return false;
+    if (expected != stored->crc) {
+        return false; // CRC invalid → caller decides what to do
+    }
 
+    // Case 3: Valid config
     out = *stored;
     return true;
 }
@@ -61,9 +89,10 @@ void save_config(const DeviceConfig& cfg) {
 
     // Flash write must be atomic
     uint32_t ints = save_and_disable_interrupts();
-  
-    flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
-    flash_range_program(FLASH_TARGET_OFFSET, page, FLASH_PAGE_SIZE);
+
+    // Erase and write the sector where flash_storage lives
+    flash_range_erase((uintptr_t)flash_storage - XIP_BASE, FLASH_SECTOR_SIZE);
+    flash_range_program((uintptr_t)flash_storage - XIP_BASE, page, FLASH_PAGE_SIZE);
 
     restore_interrupts(ints);
 }

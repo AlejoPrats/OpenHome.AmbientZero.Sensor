@@ -1,4 +1,4 @@
-#include "sensor_flow.hpp"
+#include "domain/sensor_flow.hpp"
 #include "pico/stdlib.h"
 
 bool read_environment(AHT20& sensor, float& temperature, float& humidity) {

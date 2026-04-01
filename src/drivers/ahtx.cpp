@@ -1,4 +1,4 @@
-#include "ahtx.hpp"
+#include "drivers/ahtx.hpp"
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 

@@ -1,4 +1,5 @@
-#include "hardware_init.hpp"
+#include "domain/hardware_init.hpp"
+#include "drivers/rgb_led.hpp"
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 
@@ -13,4 +14,6 @@ void init_hardware() {
     gpio_init(PIN_SIGNAL_BUTTON);
     gpio_set_dir(PIN_SIGNAL_BUTTON, GPIO_IN);
     gpio_pull_up(PIN_SIGNAL_BUTTON);
+
+    led.init();
 }

@@ -40,6 +40,7 @@
 #define LWIP_NETIF_STATUS_CALLBACK  1
 #define LWIP_NETIF_LINK_CALLBACK    1
 #define LWIP_NETIF_HOSTNAME         1
+#define LWIP_NETIF_EXT_STATUS_CALLBACK 1
 
 #define LWIP_NETCONN                0
 

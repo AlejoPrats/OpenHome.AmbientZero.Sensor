@@ -1,5 +1,5 @@
-#include "power_manager.hpp"
-#include "scratch_handler.hpp"
+#include "system/power_manager.hpp"
+#include "services/scratch_handler.hpp"
 #include "hardware/watchdog.h"
 #include "hardware/structs/watchdog.h"
 #include "hardware/clocks.h"

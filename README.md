@@ -82,6 +82,134 @@ Device configuration is handled through: cmakelists.txt in this section
         MAX_WATCHDOG_CHUNK=8000
     )
 
+## � Naming & Documentation Conventions
+
+This project follows a strict, minimal, and scalable naming convention designed for embedded systems with clear architectural boundaries. The goal is to ensure predictability, readability, and long‑term maintainability.
+
+## � Folder Structure
+
+| Layer       | Purpose                         | Naming            |
+|------------|----------------------------------|-------------------|
+| `app/`     | High‑level orchestration         | snake_case        |
+| `domain/`  | Pure flows, no hardware          | `<domain>_flow.*` |
+| `drivers/` | Hardware‑specific code           | snake_case        |
+| `services/`| Stateful helpers                 | snake_case        |
+| `protocol/`| JSON, parsing, server messages   | snake_case        |
+| `network/` | AP, DNS, DHCP, HTTP server       | snake_case        |
+| `portal/`  | Captive portal & provisioning    | snake_case        |
+| `storage/` | Flash config & persistence       | snake_case        |
+| `system/`  | Power, sleep, system concerns    | snake_case        |
+| `config/`  | Build‑time configuration         | snake_case        |
+
+## � File Naming
+
+**Headers & sources**
+```
+snake_case.hpp
+snake_case.cpp
+```
+
+**Classes**
+```
+PascalCase
+```
+
+**Member functions**
+```
+camelCase()
+```
+
+**Free functions**
+```
+snake_case()
+```
+
+**Flows**
+```
+File: wifi_flow.hpp
+Class: WifiFlow
+```
+
+**Stores**
+```
+File: wifi_config_store.hpp
+Class: WifiConfigStore
+```
+
+## � CMake Targets
+
+Targets use snake_case and include the folder prefix:
+
+```
+drivers_adc_battery
+domain_wifi_flow
+services_http_client
+```
+
+## � Function Documentation (Header‑Only)
+
+All public API documentation lives in the `.hpp` files.  
+`.cpp` files contain no documentation, keeping implementation clean and focused.
+
+### Documentation style (Doxygen)
+
+```cpp
+/**
+ * @brief Starts a WiFi scan and returns the number of networks found.
+ *
+ * This function triggers an asynchronous scan using the CYW43 driver.
+ * Results are retrieved later via getResults().
+ *
+ * @return int Number of networks detected, or a negative error code.
+ */
+int startScan();
+```
+
+### Rules
+
+- Document **every public method** in headers  
+- Document **only complex private methods**  
+- `.cpp` files contain **no comments** except for tricky logic notes  
+- Header comments describe **behavior**, not implementation details  
+- Keep descriptions short, factual, and deterministic  
+
+## � Example Header Layout
+
+```cpp
+#pragma once
+
+class WifiScan {
+public:
+    /**
+     * @brief Initializes the WiFi scan subsystem.
+     *
+     * Must be called once before any scan operation.
+     * Safe to call multiple times; subsequent calls are ignored.
+     */
+    void init();
+
+    /**
+     * @brief Starts an asynchronous WiFi scan.
+     *
+     * The scan runs in the background. Results can be retrieved
+     * using getResults() once the scan completes.
+     *
+     * @return true if the scan was successfully started.
+     */
+    bool startScan();
+
+    /**
+     * @brief Retrieves the results of the last scan.
+     *
+     * @return const std::vector<WifiNetwork>& List of networks.
+     */
+    const std::vector<WifiNetwork>& getResults() const;
+
+private:
+    void internalCallback();  // No documentation needed
+};
+```
+
 ## 🧪 Testing
 
 This project is tested manually on the physical device. There are no automated tests at this stage.

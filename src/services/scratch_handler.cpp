@@ -1,4 +1,4 @@
-#include "scratch_handler.hpp"
+#include "services/scratch_handler.hpp"
 #include "hardware/structs/watchdog.h"
 
 void ScratchHandler::set(Index idx, uint32_t value) {

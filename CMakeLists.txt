@@ -44,44 +44,77 @@ set(PICO_CXX_ENABLE_RTTI 1)
 
 pico_sdk_init()
 
+# Drivers
+file(GLOB_RECURSE DRIVER_SOURCES
+    "${CMAKE_CURRENT_LIST_DIR}/src/drivers/*.cpp"
+)
+
+# Services
+file(GLOB_RECURSE SERVICE_SOURCES
+    "${CMAKE_CURRENT_LIST_DIR}/src/services/*.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/src/services/*/*.cpp"
+    "${CMAKE_CURRENT_LIST_DIR}/src/services/*.c"
+    "${CMAKE_CURRENT_LIST_DIR}/src/services/*/*.c"
+)
+
+# Storage
+file(GLOB_RECURSE STORAGE_SOURCES
+    "${CMAKE_CURRENT_LIST_DIR}/src/services/storage/*.cpp"
+)
+
+# Domain logic
+file(GLOB_RECURSE DOMAIN_SOURCES
+    "${CMAKE_CURRENT_LIST_DIR}/src/domain/*.cpp"
+)
+
+# Provisioning (POC)
+file(GLOB_RECURSE PROVISIONING_SOURCES
+    "${CMAKE_CURRENT_LIST_DIR}/src/domain/provisioning/*.cpp"
+)
+
+# Protocols
+file(GLOB_RECURSE PROTOCOL_SOURCES
+    "${CMAKE_CURRENT_LIST_DIR}/src/protocol/*.cpp"
+)
+
+# System
+file(GLOB_RECURSE SYSTEM_SOURCES
+    "${CMAKE_CURRENT_LIST_DIR}/src/system/*.cpp"
+)
+
+# Config
+file(GLOB_RECURSE CONFIG_SOURCES
+    "${CMAKE_CURRENT_LIST_DIR}/src/config/*.cpp"
+)
+
 # -------------------------------------------------------
 # Executable
 # -------------------------------------------------------
 
 add_executable(ambientzero_sensor
-    # Entry point
     src/app/main.cpp
     src/app/app_main.cpp
 
-    # Drivers
-    src/drivers/ahtx.cpp
-    src/drivers/rgb_led.cpp
-    src/drivers/adc_battery.cpp
-    src/drivers/sleeper.cpp
+    ${DRIVER_SOURCES}
+    ${SERVICE_SOURCES}
+    ${STORAGE_SOURCES}
+    ${DOMAIN_SOURCES}
+    ${PROVISIONING_SOURCES}
+    ${PROTOCOL_SOURCES}
+    ${SYSTEM_SOURCES}
+    ${CONFIG_SOURCES}
+)
 
-    # Services
-    src/services/http_client.cpp
-    src/services/wifi.cpp
-    src/services/scratch_handler.cpp
 
-    # Protocols
-    src/protocol/json_parser.cpp
-    src/protocol/server_response.cpp
+# -----------------------------------------
+# RESERVE FLASH SPACE FOR SETTINGS
+# -----------------------------------------
+target_link_options(ambientzero_sensor PRIVATE
+    -Wl,-T${CMAKE_CURRENT_LIST_DIR}/flash_config.ld
+)
 
-    # System
-    src/system/power_manager.cpp
-
-    # Domain
-    src/domain/hardware_init.cpp
-    src/domain/button_flow.cpp
-    src/domain/sensor_flow.cpp
-    src/domain/wifi_flow.cpp
-    src/domain/http_flow.cpp
-
-    # Config
-    src/config/device_config.cpp
-    src/config/lwipopts.h
-    src/config/lwipopts_custom.h
+target_link_options(ambientzero_sensor PRIVATE
+    -Wl,--section-start=.flash_config=0x101E0000
 )
 
 # -----------------------------------------
@@ -104,13 +137,16 @@ target_compile_definitions(ambientzero_sensor PRIVATE
     HTTP_API_PORT=80
 
     MAX_WATCHDOG_CHUNK=8000
+
+    AP_SSID="AmbientZero-Sensor"
+    AP_PASSWORD=""
 )
 
 pico_set_program_name(ambientzero_sensor "ambientzero_sensor")
 pico_set_program_version(ambientzero_sensor "0.1")
 
 pico_enable_stdio_uart(ambientzero_sensor 0)
-pico_enable_stdio_usb(ambientzero_sensor 1)
+pico_enable_stdio_usb(ambientzero_sensor 0)
 
 # -------------------------------------------------------
 # Includes

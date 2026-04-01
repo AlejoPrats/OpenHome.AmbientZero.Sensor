@@ -1,8 +1,8 @@
-#include "http_flow.hpp"
-#include "http_client.hpp"
-#include "json_parser.hpp"
-#include "server_response.hpp"
-#include "device_config.hpp"
+#include "domain/http_flow.hpp"
+#include "services/http_client.hpp"
+#include "protocol/json_parser.hpp"
+#include "protocol/server_response.hpp"
+#include "config/device_config.hpp"
 #include "pico/stdlib.h"
 #include <cstdio>
 #include <cstring>
@@ -74,12 +74,12 @@ bool send_measurement_flow(
 
                 if (serverResponse.isLightEnabled)
                 {
-                    led.set_mode(LED_OK);
+                    led.set_mode_blocking(LED_OK);
                 }
             }
             else
             {
-                led.set_mode(LED_ERROR);
+                led.set_mode_blocking(LED_ERROR);
             }
 
             done = true;
