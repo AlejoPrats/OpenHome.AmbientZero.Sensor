@@ -90,15 +90,15 @@ static std::string applyTemplate(const char *tpl,
 
 static bool handleCaptivePortalProbes(tcp_pcb *pcb, pbuf *p, const char *buffer)
 {
-    const bool is_android =
+    const bool isAndroid =
         strstr(buffer, "GET /generate_204") ||
         strstr(buffer, "GET /gen_204");
 
-    const bool is_apple =
+    const bool isApple =
         strstr(buffer, "GET /hotspot-detect.html") ||
         strstr(buffer, "GET /captive.apple.com");
 
-    const bool is_windows =
+    const bool isWindows =
         strstr(buffer, "GET /connecttest.txt");
 
     // Windows fallback redirect probe
@@ -116,17 +116,17 @@ static bool handleCaptivePortalProbes(tcp_pcb *pcb, pbuf *p, const char *buffer)
         return true;
     }
 
-    const bool is_firefox =
+    const bool isFirefox =
         strstr(buffer, "GET /canonical.html");
 
-    const bool is_steam =
+    const bool isSteam =
         strncmp(buffer, "GET /204", 8) == 0;
 
-    const bool is_ms_crypto =
+    const bool isMsCrypto =
         strstr(buffer, "GET /msdownload");
 
     // --- Android & Apple → redirect to portal ---
-    if (is_android || is_apple)
+    if (isAndroid || isApple)
     {
         const char *resp =
             "HTTP/1.1 302 Found\r\n"
@@ -141,7 +141,7 @@ static bool handleCaptivePortalProbes(tcp_pcb *pcb, pbuf *p, const char *buffer)
     }
 
     // --- Windows captive portal ---
-    if (is_windows)
+    if (isWindows)
     {
         const char *resp =
             "HTTP/1.1 302 Found\r\n"
@@ -156,7 +156,7 @@ static bool handleCaptivePortalProbes(tcp_pcb *pcb, pbuf *p, const char *buffer)
     }
 
     // --- Firefox captive portal ---
-    if (is_firefox)
+    if (isFirefox)
     {
         const char *resp =
             "HTTP/1.1 200 OK\r\n"
@@ -172,7 +172,7 @@ static bool handleCaptivePortalProbes(tcp_pcb *pcb, pbuf *p, const char *buffer)
     }
 
     // --- Steam captive portal ---
-    if (is_steam)
+    if (isSteam)
     {
         const char *resp =
             "HTTP/1.1 204 No Content\r\n"
@@ -185,7 +185,7 @@ static bool handleCaptivePortalProbes(tcp_pcb *pcb, pbuf *p, const char *buffer)
     }
 
     // --- Windows CryptoAPI certificate fetch ---
-    if (is_ms_crypto)
+    if (isMsCrypto)
     {
         const char *resp =
             "HTTP/1.1 404 Not Found\r\n"
@@ -352,7 +352,7 @@ void HttpServer::buildWifiOptionsHtml()
 {
     g_wifiOptionsHtml.clear();
 
-    // ⭐ Sort networks alphabetically by SSID
+    // Sort networks alphabetically by SSID
     std::sort(
         WifiScan::networks,
         WifiScan::networks + WifiScan::networkCount,
@@ -475,7 +475,7 @@ err_t HttpServer::onSent(void *arg, tcp_pcb *pcb, u16_t len)
     // If all chunks are sent, request reboot
     if (state->offset >= state->data.size())
     {
-        // (later we’ll delete state here)
+        // (later delete state here)
     }
 
     return ERR_OK;

@@ -33,10 +33,10 @@ bool WiFi::connect() {
         10000 // 10 second timeout
     );
 
-    connected = (result == 0);
-    return connected;
+    isConnected = (result == 0);
+    return isConnected;
 }
 
 bool WiFi::is_connected() const {
-    return connected;
+    return isConnected;
 }

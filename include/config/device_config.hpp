@@ -24,6 +24,7 @@ struct DeviceConfig
     char id[64];
     char ssid[32];
     char password[64];
+    char version[32];
     uint32_t crc;
 };
 
@@ -55,13 +56,10 @@ bool load_config(DeviceConfig &out);
 void save_config(const DeviceConfig &cfg);
 
 /**
- * @brief Checks whether the stored flash region is fully erased.
+ * @brief Ensures the stored version matches the running firmware version.
  *
- * Determines if the underlying flash memory contains only 0xFF bytes,
- * which indicates an uninitialized or factory‑reset state.
+ * If the version field is empty or different, it is updated and persisted.
  *
- * @param stored  Pointer to the raw flash region mapped as DeviceConfig.
- *
- * @return true if the region is fully erased, false otherwise.
+ * @param firmwareVersion  Null‑terminated semantic version string.
  */
-bool is_flash_erased(const DeviceConfig *stored);
+void sync_config_version(const char* firmwareVersion);

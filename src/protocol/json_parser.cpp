@@ -129,7 +129,7 @@ bool json_get(const JsonPair *pairs, size_t count,
 // ------------------------------------------------------------
 // Typed getters
 // ------------------------------------------------------------
-bool getString(const JsonValue &v, char *out, size_t maxLen)
+bool get_string(const JsonValue &v, char *out, size_t maxLen)
 {
     if (v.type != JsonType::STRING)
         return false;
@@ -142,7 +142,7 @@ bool getString(const JsonValue &v, char *out, size_t maxLen)
     return true;
 }
 
-bool getBool(const JsonValue &v, bool &out)
+bool get_bool(const JsonValue &v, bool &out)
 {
     if (v.type != JsonType::BOOLEAN)
         return false;
@@ -161,7 +161,7 @@ bool getBool(const JsonValue &v, bool &out)
     return false;
 }
 
-bool getInt(const JsonValue &v, int &out)
+bool get_int(const JsonValue &v, int &out)
 {
     if (v.type != JsonType::NUMBER)
         return false;

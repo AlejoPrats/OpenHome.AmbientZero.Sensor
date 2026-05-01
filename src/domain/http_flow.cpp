@@ -3,9 +3,11 @@
 #include "protocol/json_parser.hpp"
 #include "protocol/server_response.hpp"
 #include "config/device_config.hpp"
+#include "services/scratch_handler.hpp"
 #include "pico/stdlib.h"
 #include <cstdio>
 #include <cstring>
+#include <string>
 
 bool send_measurement_flow(
     float temperature,
@@ -15,16 +17,17 @@ bool send_measurement_flow(
     RGBLed &led,
     const DeviceConfig &cfg)
 {
+    // ---------------------------------------------------------
+    // Build JSON body
+    // ---------------------------------------------------------
     char deviceIdValue[80];
 
     if (cfg.id[0])
     {
-        // GUID exists → wrap in quotes
         snprintf(deviceIdValue, sizeof(deviceIdValue), "\"%s\"", cfg.id);
     }
     else
     {
-        // No GUID → literal null
         snprintf(deviceIdValue, sizeof(deviceIdValue), "null");
     }
 
@@ -34,62 +37,75 @@ bool send_measurement_flow(
              "\"temperature\": %.2f,"
              "\"deviceId\": %s,"
              "\"adcReading\": %d,"
-             "\"isSignaling\": %s"
+             "\"isSignaling\": %s,"
+             "\"Version\": \"%s\""
              "}",
              temperature,
              deviceIdValue,
              battery_raw,
-             isSignaling ? "true" : "false");
+             isSignaling ? "true" : "false",
+             cfg.version);
 
-    bool done = false;
-    bool success = false;
+    // ---------------------------------------------------------
+    // Perform HTTP request using unified client
+    // ---------------------------------------------------------
+    HttpJsonRequest req;
+    req.ip = NODE_IP;
+    req.port = HTTP_API_PORT;
+    req.path = HTTP_API_PATH;
 
-    http_request(
-        HTTP_API_IP,
-        HTTP_API_PORT,
-        "PUT",
-        "/AmbientTemperature",
-        jsonBody,
-        [&](const std::string &response)
-        {
-            ServerResponse serverResponse{};
-            if (parse_server_response(response.c_str(), serverResponse))
-            {
-                success = true;
+    req.verb = "PUT";
+    req.body = jsonBody;
 
-                // Only update config if server sent a real ID
-                if (serverResponse.hasDeviceId && cfg.id[0] == '\0')
-                {
-                    DeviceConfig newCfg = cfg;
+    HttpClient client;
 
-                    size_t copyLen = strlen(serverResponse.deviceId);
-                    if (copyLen >= sizeof(newCfg.id))
-                        copyLen = sizeof(newCfg.id) - 1;
-
-                    memcpy(newCfg.id, serverResponse.deviceId, copyLen);
-                    newCfg.id[copyLen] = '\0';
-
-                    save_config(newCfg);
-                }
-
-                if (serverResponse.isLightEnabled)
-                {
-                    led.set_mode_blocking(LED_OK);
-                }
-            }
-            else
-            {
-                led.set_mode_blocking(LED_ERROR);
-            }
-
-            done = true;
-        });
-
-    while (!done)
+    std::string response = client.request(req);
+    if (response.empty())
     {
-        http_poll();
-        sleep_ms(10);
+        led.set_mode_blocking(LED_ERROR);
+        return false;
     }
 
-    return success;
+    // ---------------------------------------------------------
+    // Parse server response
+    // ---------------------------------------------------------
+    ServerResponse serverResponse{};
+
+    if (!parse_server_response(response.c_str(), serverResponse))
+    {
+        led.set_mode_blocking(LED_ERROR);
+        return false;
+    }
+
+    // ---------------------------------------------------------
+    // Update device ID if server assigned one
+    // ---------------------------------------------------------
+    if (serverResponse.hasDeviceId && cfg.id[0] == '\0')
+    {
+        DeviceConfig newCfg = cfg;
+
+        size_t copyLen = strlen(serverResponse.deviceId);
+        if (copyLen >= sizeof(newCfg.id))
+            copyLen = sizeof(newCfg.id) - 1;
+
+        memcpy(newCfg.id, serverResponse.deviceId, copyLen);
+        newCfg.id[copyLen] = '\0';
+
+        save_config(newCfg);
+    }
+
+    // ---------------------------------------------------------
+    // LED feedback
+    // ---------------------------------------------------------
+    if (serverResponse.isLightEnabled)
+    {
+        led.set_mode_blocking(LED_OK);
+    }
+
+    if (serverResponse.shouldUpdate)
+    {
+        set_boot_flag(BootFlag::OTA_PENDING);
+    }
+
+    return true;
 }

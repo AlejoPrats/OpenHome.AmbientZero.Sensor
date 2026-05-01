@@ -33,7 +33,7 @@ public:
      *
      * @param isWifiInitialized  True if CYW43 was already initialized.
      */
-    void continueDeepSleep(bool isWifiInitialized);
+    void continue_deep_sleep(bool isWifiInitialized);
 
     /**
      * @brief Requests deep sleep after the current flow completes.
@@ -43,7 +43,7 @@ public:
      *
      * @param ms  Duration of deep sleep in milliseconds.
      */
-    void requestDeepSleep(uint64_t ms);
+    void request_deep_sleep(uint64_t ms);
 
     /**
      * @brief Performs a controlled reboot into the deep‑sleep entry path.
@@ -52,7 +52,41 @@ public:
      * only after all pending operations (e.g., network sends) have
      * completed.
      */
-    void rebootForSleep();
+    void reboot_for_sleep();
+
+    /**
+     * @brief Triggers a full system reset from RAM.
+     *
+     * This function performs a Cortex‑M0+ system reset by writing the
+     * SYSRESETREQ bit in the Application Interrupt and Reset Control
+     * Register (AIRCR). It is marked with @ref __not_in_flash_func so the
+     * implementation is placed entirely in RAM, ensuring it remains
+     * executable even after flash has been erased or reprogrammed during
+     * OTA updates.
+     *
+     * This function does not return. After requesting the reset, it enters
+     * an infinite loop while waiting for the hardware reset to occur.
+     *
+     * @note This reset method is safe to call after flash operations,
+     *       including rewriting the main application region.
+     *
+     * @warning Must only be called when the system is in a flash‑safe
+     *          state (interrupts disabled, Wi‑Fi chip powered down, and
+     *          no code executing from flash).
+     */
+    static void ram_system_reset();
+
+    /**
+     * @brief Prepares the system for safe flash operations.
+     *
+     * Ensures the hardware is placed into a stable state before performing
+     * flash writes. This includes shutting down the Wi‑Fi subsystem (if active),
+     * power‑cycling the CYW43 chip to guarantee a clean post‑reset state, and
+     * disabling all interrupts to prevent execution from returning to flash.
+     *
+     * @param wifiInitialized Indicates whether the Wi‑Fi subsystem is currently active.
+     */
+    void enter_flash_safe_state(bool wifiInitialized);
 
 private:
     /**
@@ -85,6 +119,26 @@ private:
      * required delays or hardware sequencing.
      */
     void enterLowPower(bool isWifiInitialized);
+
+    /**
+     * @brief Gracefully shuts down the Wi‑Fi and networking stack.
+     *
+     * Disconnects from the network, transitions the Wi‑Fi firmware into a
+     * low‑power state, flushes pending lwIP/SDIO activity, and fully deinitializes
+     * the CYW43 subsystem. This ensures no SDIO or networking activity interferes
+     * with flash operations.
+     */
+    void shutdownWifiStack();
+
+    /**
+     * @brief Fully resets the CYW43 Wi‑Fi chip via WL_REG_ON.
+     *
+     * Toggles the WL_REG_ON control pin (WIFI_REG_ON_PIN) to force a complete
+     * hardware reset of the CYW43 module. This is required because software
+     * resets (e.g., watchdog resets) do not reset the Wi‑Fi chip, which can
+     * otherwise remain in an undefined state and block system boot.
+     */
+    void powerCycleWifiChip();
 
     Sleeper sleeper;
 };

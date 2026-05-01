@@ -20,12 +20,12 @@ void provisioning_setup()
     DeviceConfig cfg{};
     load_config(cfg);
 
-    if (!WifiFlow::startAccessPoint("AmbientZero-Setup"))
+    if (!WifiFlow::start_access_point("AmbientZero-Setup"))
     {
         return;
     }
 
-    WifiFlow::scanNetworks(5);
+    WifiFlow::scan_networks(5);
 
     if (!http.start())
     {
@@ -56,7 +56,7 @@ void provisioning_loop()
         }
 
         // ⭐ NOTHING TO POLL
-        // Your DHCP, DNS, HTTP, AP, and lwIP stack are all callback-driven.
+        // DHCP, DNS, HTTP, AP, and lwIP stack are all callback-driven.
         // They run in background threads or lwIP internal context.
         led.poll();
         sleep_ms(50); // keep the CPU alive without burning cycles

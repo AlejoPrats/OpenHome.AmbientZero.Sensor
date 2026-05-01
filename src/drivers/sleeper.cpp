@@ -4,7 +4,7 @@
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
 
-void Sleeper::sleepChunkMs(uint32_t ms) {
+void Sleeper::sleep_chunk_ms(uint32_t ms) {
     watchdog_enable(ms, 1);
 
     while (true) {

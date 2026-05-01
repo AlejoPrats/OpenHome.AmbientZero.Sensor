@@ -9,6 +9,7 @@ bool parse_server_response(const char *json, ServerResponse &out)
     out.deviceId[0] = '\0';
     out.hasDeviceId = false;
     out.isLightEnabled = false;
+    out.shouldUpdate = false;
 
     // Parse JSON into key/value pairs
     JsonPair pairs[8];
@@ -28,7 +29,7 @@ bool parse_server_response(const char *json, ServerResponse &out)
         }
         else
         {
-            if (getString(v, out.deviceId, sizeof(out.deviceId)))
+            if (get_string(v, out.deviceId, sizeof(out.deviceId)))
             {
                 out.hasDeviceId = true;
             }
@@ -41,9 +42,21 @@ bool parse_server_response(const char *json, ServerResponse &out)
     if (json_get(pairs, count, "IsLightEnabled", v))
     {
         bool b;
-        if (getBool(v, b))
+        if (get_bool(v, b))
         {
             out.isLightEnabled = b;
+        }
+    }
+
+    // -------------------------
+    // ShouldUpdate
+    // -------------------------
+    if (json_get(pairs, count, "ShouldUpdate", v))
+    {
+        bool b;
+        if (get_bool(v, b))
+        {
+            out.shouldUpdate = b;
         }
     }
 

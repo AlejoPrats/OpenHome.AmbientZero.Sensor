@@ -9,9 +9,9 @@ uint32_t ScratchHandler::get(Index idx) {
     return watchdog_hw->scratch[static_cast<uint32_t>(idx)];
 }
 
-void ScratchHandler::resetAll() {
+void ScratchHandler::reset_all() {
     set(CHUNKS, 0);
     set(REMAINDER, 0);
     set(LAST_CHUNK, 0);
-    set(SHOULD_SLEEP, 0);
+    set(BOOT_FLAG, 0);
 }

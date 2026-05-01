@@ -24,6 +24,7 @@ struct ServerResponse {
     char deviceId[64];
     bool hasDeviceId;
     bool isLightEnabled;
+    bool shouldUpdate;
 };
 
 /**

@@ -24,5 +24,5 @@ public:
      *
      * @param ms  Total duration to sleep.
      */
-    void sleepChunkMs(uint32_t ms);
+    void sleep_chunk_ms(uint32_t ms);
 };

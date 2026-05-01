@@ -84,7 +84,7 @@ int WifiScan::scanCallback(void* env, const cyw43_ev_scan_result_t* result) {
     // Check if already stored
     for (int i = 0; i < networkCount; ++i) {
         if (strcmp(networks[i].ssid, ssidBuf) == 0) {
-            return 0; // already seen
+            return 0;
         }
     }
 

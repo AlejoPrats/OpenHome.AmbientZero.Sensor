@@ -5,6 +5,8 @@
 #include "drivers/rgb_led.hpp"
 #include "portal/provisioning_flow.hpp"
 #include "domain/hardware_init.hpp"
+#include "services/scratch_handler.hpp"
+#include "domain/ota_flow.hpp"
 #include <cstdio>
 
 ButtonAction wait_for_button_action()
@@ -33,16 +35,48 @@ ButtonAction wait_for_button_action()
 int main()
 {
     PowerManager pm;
-    pm.continueDeepSleep(false);
+    pm.continue_deep_sleep(false);
 
     stdio_init_all();
     sleep_ms(3000);
     init_hardware();
 
-    // 1. Classify user intent (non-blocking, with LED feedback)
+    // ------------------------------------------------------------
+    // 0. OTA override: check boot flag BEFORE any other flow
+    // ------------------------------------------------------------
+    BootFlag flag = get_boot_flag();
+
+    if (flag == BootFlag::OTA_PENDING)
+    {
+        set_boot_flag(BootFlag::NONE);
+        
+        // Start OTA using your existing API
+        ota_setup(NODE_IP); 
+
+        while (true)
+        {
+            OtaResult result = ota_loop();
+
+            if (result == OtaResult::ReadyToApply)
+            {
+                break;
+            }
+
+            if (result == OtaResult::Failed)
+            {
+                break;
+            }
+
+            sleep_ms(10);
+        }
+    }
+
+    // ------------------------------------------------------------
+    // 1. Normal boot logic continues here
+    // ------------------------------------------------------------
+
     ButtonAction action = wait_for_button_action();
 
-    // 2. Decide which mode to run
     switch (action)
     {
     case ButtonAction::SIGNAL_PRESS:
@@ -60,7 +94,6 @@ int main()
         break;
     }
 
-    // 3. Normal cycle → deep sleep
-    pm.requestDeepSleep(1200000);
-    pm.rebootForSleep();
+    pm.request_deep_sleep(DEEP_SLEEP_MS);
+    pm.reboot_for_sleep();
 }

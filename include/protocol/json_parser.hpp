@@ -102,18 +102,18 @@ bool json_get(const JsonPair *pairs, size_t count,
  *
  * @return true if the value is a valid JSON string and fits in the buffer.
  */
-bool getString(const JsonValue &v, char *out, size_t maxLen);
+bool get_string(const JsonValue &v, char *out, size_t maxLen);
 
 /**
  * @brief Converts a JSON boolean value into a native bool.
  *
  * @return true if the value is a valid boolean.
  */
-bool getBool(const JsonValue &v, bool &out);
+bool get_bool(const JsonValue &v, bool &out);
 
 /**
  * @brief Converts a JSON number into an integer.
  *
  * @return true if the value is a valid number and fits in int range.
  */
-bool getInt(const JsonValue &v, int &out);
+bool get_int(const JsonValue &v, int &out);

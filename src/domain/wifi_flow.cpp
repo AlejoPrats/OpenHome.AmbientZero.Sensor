@@ -12,7 +12,6 @@
 
 namespace WifiFlow
 {
-    // Private to this namespace — not visible outside
     static AccessPoint g_ap;
     static DhcpServer g_dhcp;
     static DnsServer g_dns;
@@ -32,7 +31,7 @@ namespace WifiFlow
         return true;
     }
 
-    bool startAccessPoint(const std::string &ssid)
+    bool start_access_point(const std::string &ssid)
     {
         if (!g_ap.start(ssid))
         {
@@ -60,7 +59,7 @@ namespace WifiFlow
         return true;
     }
 
-    void scanNetworks(int passes)
+    void scan_networks(int passes)
     {
         WifiScan::start(passes);
         while (!WifiScan::isFinished())
@@ -70,4 +69,4 @@ namespace WifiFlow
         }
     }
 
-} // namespace WifiFlow
+}

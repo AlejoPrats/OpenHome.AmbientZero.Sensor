@@ -38,7 +38,7 @@ namespace WifiFlow
      *
      * @return true if AP mode and all services were started successfully.
      */
-    bool startAccessPoint(const std::string &ssid);
+    bool start_access_point(const std::string &ssid);
 
     /**
      * @brief Performs a multi‑pass WiFi network scan.
@@ -52,6 +52,6 @@ namespace WifiFlow
      * @note This function is non‑blocking per pass but must be called
      *       from a context that allows repeated polling of WiFi events.
      */
-    void scanNetworks(int passes);
+    void scan_networks(int passes);
 
 }

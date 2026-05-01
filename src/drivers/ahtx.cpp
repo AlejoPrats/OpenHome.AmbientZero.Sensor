@@ -63,7 +63,6 @@ bool AHT10::init()
         return false;
     }
 
-    // � ADD THIS — MicroPython discards the first reading
     update();
     sleep_ms(40);
 

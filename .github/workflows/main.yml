@@ -1,0 +1,107 @@
+name: AmbientZero Sensor Build
+
+on:
+  push:
+    tags:
+      - 'patch-*'
+      - 'minor-*'
+      - 'major-*'
+
+jobs:
+  check-branch-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.check_step.outputs.branch }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get current branch
+        id: check_step
+        run: |
+          raw=$(git branch -r --contains ${{ github.ref }})
+          branch="$(echo $raw)"
+          echo "branch=$branch" >> $GITHUB_OUTPUT
+          echo "Branches where this tag exists : $branch."
+
+  build:
+    runs-on: ubuntu-latest
+    needs: check-branch-tag
+    if: needs.check-branch-tag.outputs.branch == 'origin/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Install ARM GCC
+      - name: Install ARM GCC Toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-arm-none-eabi binutils-arm-none-eabi
+
+      # Install CMake + Ninja
+      - name: Install CMake and Ninja
+        run: |
+          sudo apt-get install -y cmake ninja-build
+
+      # Clone Pico SDK (if not submodule)
+      - name: Clone Pico SDK
+        run: |
+          git clone -b 2.2.0 https://github.com/raspberrypi/pico-sdk.git
+          git clone https://github.com/raspberrypi/pico-extras.git
+
+      # Get Next Version
+      - name: Get Next Version
+        id: version
+        run: |
+          {
+            echo "Version=$(curl -k -L -X GET 'https://openhomeproject.com/system/Version/GetNextVersion?versionIncrement=${{github.ref_name}}' -H 'x-api-key: ${{ secrets.APIKEY }}')"  
+          } >> $GITHUB_OUTPUT
+
+      # Configure CMake with VERSION injected
+      - name: Configure CMake
+        run: |
+          mkdir build
+          cd build
+          cmake .. \
+            -DPICO_SDK_PATH=$PWD/../pico-sdk \
+            -DVERSION=${{ steps.version.outputs.Version }} \
+            -G Ninja
+
+      # Build firmware (CMake handles UF2, BIN, manifest)
+      - name: Build Firmware
+        run: |
+          cd build
+          ninja
+
+      # Package artifacts
+      - name: Package Firmware
+        id: zip
+        run: |
+          mkdir zip
+          cd build
+          zip -j "../zip/ambientzero_${{ steps.version.outputs.Version }}.zip" \
+            ambientzero_sensor.bin \
+            ambientzero_sensor.uf2 \
+            manifest.bin
+
+      # Upload to server
+      - name: Upload Firmware
+        uses: wangyucode/sftp-upload-action@v2.0.2
+        with:
+          host: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          compress: true
+          forceUpload: true
+          localDir: './zip'
+          remoteDir: ${{ secrets.FTP_FILE_PATH }}
+
+      # Deploy
+      - name: Deploy Firmware
+        run: |
+          curl -k -L -X POST 'https://openhomeproject.com/system/Deploy/DeployFirmware' \
+            -H 'x-api-key: ${{ secrets.APIKEY }}' \
+            -H 'Content-Type: application/json' \
+            --data-raw '{"fileName": "ambientzero_${{ steps.version.outputs.Version }}.zip", "version": "${{ steps.version.outputs.Version }}"}'

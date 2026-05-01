@@ -1,221 +1,190 @@
+### 🌡️ AmbientZero Sensor
 
-# AmbientZero Sensor
+A lightweight, low‑power environmental sensor built on the Raspberry Pi Pico W, written in modern C++ with a clean, deterministic architecture.
+It measures temperature, humidity, battery level, and reports data to the AmbientZero API using an almost‑stateless flow.
 
-AmbientZero Sensor is a lightweight, low‑power environmental monitoring device built on the Raspberry Pi Pico W.  
-It measures temperature, humidity, and battery status, and periodically reports data to a remote API using an almost‑stateless design.
+The firmware is designed for:
 
-This project is written in modern C++ and follows a modular architecture designed for clarity, maintainability, and minimal resource usage on the RP2040.
+ - Reliability
+ - Maintainability
+ - Minimal RAM usage
+ - Deterministic behavior
+ - OTA‑updatable deployments
 
----
+------------
 
-## ✨ Features
+### ✨ Features
 
-- 📡 Wi‑Fi connectivity with automatic reconnection flow  
-- 🌡️ AHTx temperature & humidity sensor driver  
-- 🔋 Battery monitoring using an optocoupler‑isolated ADC path  
-- 🌐 HTTP client with configurable endpoints  
-- 💤 Sleep & power‑management system for low‑power operation  
-- 🔄 Stateless request/response flow  
-- 🧩 Modular architecture (drivers, services, domain flows, system layer)  
-- 🛠️ Custom lwIP configuration for Pico W stability  
-
----
-
-## 📂 Project Structure
-
-    include/ 		# Public headers 
-    src/ 
-    app/			# Application entry point and high-level logic 
-    config/ 		# Device configuration and lwIP tuning 
-    domain/ 		# State machines and operational flows 
-    drivers/ 		# Hardware drivers (ADC, AHTx, RGB LED, etc.) 
-    protocol/		# JSON parsing and server response handling 
-    services/		# WiFi, HTTP client, scratch storage 
-    system/			# Power management and system-level utilities 
-    CMakeLists.txt	# Build configuration
+-    📡 Wi‑Fi connectivity with automatic reconnection
+-    🌡️ AHTx temperature & humidity driver
+-    🔋 Battery monitoring via optocoupler‑isolated ADC
+-    🌐 HTTP client with configurable endpoints
+-    😴 Deep‑sleep power management
+-    🔁 Stateless request/response flow
+-    🧩 Modular architecture (drivers, services, domain flows, system layer)
+-    ⚙️ Custom lwIP configuration for Pico W stability
+-    🚀 OTA updates using raw .bin + manifest.bin (no slicing required)
 
 
-This layout keeps hardware, logic, and protocol concerns cleanly separated.
+------------
 
----
+### 📁 Project Structure
 
-## 🚀 Getting Started
 
-### Requirements
-- Raspberry Pi Pico W  
-- CMake 3.13+  
-- ARM GCC toolchain  
-- Pico SDK 2.2.0  
+```
+include/        # Public headers
+src/
+  app/          # Entry point & high-level orchestration
+  config/       # Build-time configuration & lwIP tuning
+  domain/       # Pure flows, OTA logic, state machines
+  drivers/      # Hardware drivers (ADC, AHTx, RGB LED, etc.)
+  protocol/     # JSON parsing & server response handling
+  services/     # WiFi, HTTP client, scratch storage
+  system/       # Power management, sleep, watchdog
+tools/          # Host tools (gen_manifest)
+CMakeLists.txt  # Build configuration
+```
 
-### Build Instructions
+This layout enforces strict separation between hardware, logic, and protocol concerns.
+
+
+------------
+
+### 🛠️ Build Requirements
+
+-    Pico SDK 2.2.0
+-    ARM GCC Toolchain (gcc-arm-none-eabi)
+-    CMake 3.13+
+-    Ninja (recommended)
+-    Raspberry Pi Pico W
+
+
+------------
+
+### 🚧 Building the Firmware
 
 ```bash
 mkdir build
 cd build
-cmake ..
-make
-```
-The resulting `.uf2` file will be located in the `build/` directory.
 
-Flash it by holding BOOTSEL on the Pico W and copying the file to the mounted drive.
+cmake .. \
+  -DPICO_SDK_PATH=/path/to/pico-sdk \
+  -DVERSION=1.2.3 \
+  -G Ninja
 
-## ⚙️ Configuration
-
-Device configuration is handled through: cmakelists.txt in this section
-
-    target_compile_definitions(ambientzero_sensor PRIVATE
-        ENABLE_DEBUG_LIGHTS=0   # <--- set to 0 for production
-        PIN_AHT_SDA=16
-        PIN_AHT_SCL=17
-    
-        PIN_LED_R=2
-        PIN_LED_G=1
-        PIN_LED_B=0
-    
-        PIN_BATTERY_ADC=26
-        PIN_OCTOCOUPLER=14
-        PIN_SIGNAL_BUTTON=15
-    
-        HTTP_API_IP="10.0.0.1"
-        HTTP_API_PORT=80
-    
-        MAX_WATCHDOG_CHUNK=8000
-    )
-
-## � Naming & Documentation Conventions
-
-This project follows a strict, minimal, and scalable naming convention designed for embedded systems with clear architectural boundaries. The goal is to ensure predictability, readability, and long‑term maintainability.
-
-## � Folder Structure
-
-| Layer       | Purpose                         | Naming            |
-|------------|----------------------------------|-------------------|
-| `app/`     | High‑level orchestration         | snake_case        |
-| `domain/`  | Pure flows, no hardware          | `<domain>_flow.*` |
-| `drivers/` | Hardware‑specific code           | snake_case        |
-| `services/`| Stateful helpers                 | snake_case        |
-| `protocol/`| JSON, parsing, server messages   | snake_case        |
-| `network/` | AP, DNS, DHCP, HTTP server       | snake_case        |
-| `portal/`  | Captive portal & provisioning    | snake_case        |
-| `storage/` | Flash config & persistence       | snake_case        |
-| `system/`  | Power, sleep, system concerns    | snake_case        |
-| `config/`  | Build‑time configuration         | snake_case        |
-
-## � File Naming
-
-**Headers & sources**
-```
-snake_case.hpp
-snake_case.cpp
+ninja
 ```
 
-**Classes**
-```
-PascalCase
-```
+Artifacts will be generated in `build/`:
+- ambientzero_sensor.uf2 → flashable firmware
 
-**Member functions**
-```
-camelCase()
-```
+- ambientzero_sensor.bin → raw binary (OTA payload)
 
-**Free functions**
-```
-snake_case()
-```
+- manifest.bin → OTA manifest with version + metadata
+Flash manually by holding BOOTSEL and copying the `.uf2` file.
 
-**Flows**
-```
-File: wifi_flow.hpp
-Class: WifiFlow
-```
 
-**Stores**
-```
-File: wifi_config_store.hpp
-Class: WifiConfigStore
+------------
+
+### 🔄 OTA Update System
+
+The OTA system now uses:
+- Raw .bin file (no slicing)
+- manifest.bin generated by gen_manifest
+- Version injected at build time via -DVERSION=x.y.z
+
+The device downloads:
+
+```bash
+/ota/firmware.bin
+/ota/manifest.bin
 ```
 
-## � CMake Targets
+and performs a safe, deterministic update.
 
-Targets use snake_case and include the folder prefix:
 
-```
-drivers_adc_battery
-domain_wifi_flow
-services_http_client
-```
+------------
 
-## � Function Documentation (Header‑Only)
+### ⚙️ Build-Time Configuration
 
-All public API documentation lives in the `.hpp` files.  
-`.cpp` files contain no documentation, keeping implementation clean and focused.
+All compile‑time settings live in `CMakeLists.txt`:
 
-### Documentation style (Doxygen)
+```bash
+target_compile_definitions(ambientzero_sensor PRIVATE
+    ENABLE_DEBUG_LIGHTS=0
 
-```cpp
-/**
- * @brief Starts a WiFi scan and returns the number of networks found.
- *
- * This function triggers an asynchronous scan using the CYW43 driver.
- * Results are retrieved later via getResults().
- *
- * @return int Number of networks detected, or a negative error code.
- */
-int startScan();
-```
+    PIN_AHT_SDA=16
+    PIN_AHT_SCL=17
 
-### Rules
+    PIN_LED_R=2
+    PIN_LED_G=1
+    PIN_LED_B=0
 
-- Document **every public method** in headers  
-- Document **only complex private methods**  
-- `.cpp` files contain **no comments** except for tricky logic notes  
-- Header comments describe **behavior**, not implementation details  
-- Keep descriptions short, factual, and deterministic  
+    PIN_BATTERY_ADC=26
+    PIN_OCTOCOUPLER=14
+    PIN_SIGNAL_BUTTON=15
 
-## � Example Header Layout
+    NODE_IP="192.168.50.170"
 
-```cpp
-#pragma once
+    HTTP_API_PORT=80
+    HTTP_API_PATH="/server/index.php"
 
-class WifiScan {
-public:
-    /**
-     * @brief Initializes the WiFi scan subsystem.
-     *
-     * Must be called once before any scan operation.
-     * Safe to call multiple times; subsequent calls are ignored.
-     */
-    void init();
+    OTA_FIRMWARE_PATH="/ota/firmware.bin"
+    OTA_MANIFEST_PATH="/ota/manifest.bin"
+    OTA_HTTP_PORT=80
+    OTA_PAGE_SIZE=256
 
-    /**
-     * @brief Starts an asynchronous WiFi scan.
-     *
-     * The scan runs in the background. Results can be retrieved
-     * using getResults() once the scan completes.
-     *
-     * @return true if the scan was successfully started.
-     */
-    bool startScan();
+    MAX_WATCHDOG_CHUNK=8000
 
-    /**
-     * @brief Retrieves the results of the last scan.
-     *
-     * @return const std::vector<WifiNetwork>& List of networks.
-     */
-    const std::vector<WifiNetwork>& getResults() const;
+    AP_SSID="AmbientZero-Sensor"
+    AP_PASSWORD=""
 
-private:
-    void internalCallback();  // No documentation needed
-};
+    DEEP_SLEEP_MS=60000
+)
 ```
 
-## 🧪 Testing
+------------
 
-This project is tested manually on the physical device. There are no automated tests at this stage.
+### 🧱 Architecture & Naming Conventions
 
-## 📜 License
+**Folder Naming**
 
-This project is licensed under the **GNU General Public License v3.0 (GPLv3)**. See the `LICENSE` file for full details.
+| Folder  | Purpose  |
+| ------------ | ------------ |
+| app/  | High‑level orchestration  |
+| domain/  | Pure flows, OTA, logic  |
+| drivers/  | Hardware‑specific code  |
+| services/  | Stateful helpers  |
+| protocol/  |  JSON, parsing, server messages |
+| system/  | Power, sleep, watchdog  |
+| config/  | Build‑time configuration  |
 
-:warning: :warning: :warning: **Do not connect the RPP to the USB while the battery is connected**, as far as I could investigate on the internet is that it will try to recharge the battery, but it might have some unintended results, and since I didn't want to blow any batteries or RPPs I didn't dig further into this issue, if that's the case in the future we might have rechargeable sensors, but for now lets not take risks  :sweat_smile:
+**File Naming**
+
+- snake_case.cpp / snake_case.hpp
+- Classes → PascalCase
+- Methods → camelCase()
+- Free functions → snake_case()
+- Flows → wifi_flow.hpp → WifiFlow
+- Stores → wifi_config_store.hpp → WifiConfigStore
+
+------------
+
+### 🧪 Testing
+
+Testing is currently manual on physical hardware.
+
+------------
+
+### 📄 License
+
+Licensed under GPLv3.
+See LICENSE for details.
+
+------------
+
+### ⚠️ Hardware Warning
+
+**Do NOT connect USB while a battery is connected**.  
+The Pico W may attempt to charge the battery, which can damage the board or the cell.
+Until proper charging circuitry is added, avoid dual‑power scenarios.

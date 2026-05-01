@@ -46,7 +46,7 @@ public:
      * are filtered out before insertion).
      */
     struct NetworkInfo {
-        char ssid[33];   // fixed-size, zero-allocation
+        char ssid[33];
         bool secure;
     };
 

@@ -1,4 +1,5 @@
 #include "app/app_main.hpp"
+#include "version_bootstrap.hpp"
 
 #include "domain/hardware_init.hpp"
 #include "domain/sensor_flow.hpp"
@@ -24,7 +25,6 @@ void app_main_start_provisioning()
     provisioning_setup();
 }
 
-extern const uint8_t __flash_config_start__;
 extern const uint8_t __flash_config_end__;
 
 void app_main_run_cycle(bool isSignaling)
@@ -32,13 +32,10 @@ void app_main_run_cycle(bool isSignaling)
     sensor.init();
     battery.init();
 
-    DeviceConfig cfg{};
-    bool has_config = load_config(cfg);
+    sync_config_version(BOOTSTRAP_VERSION);
 
-    if (!has_config)
-    {
-        printf("config not found \n");
-    }
+    DeviceConfig cfg{};
+    bool hasConfig = load_config(cfg);
 
     if (isSignaling)
     {

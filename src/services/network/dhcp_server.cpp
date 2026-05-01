@@ -16,5 +16,5 @@ void DhcpServer::stop() {
 
 void DhcpServer::recvCallback(void* arg, struct udp_pcb* pcb,
                               struct pbuf* p, const ip_addr_t* addr, u16_t port) {
-    // TODO: forward to your C DHCP handler
+    // TODO: forward to C DHCP handler
 }

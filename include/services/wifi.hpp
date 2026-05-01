@@ -56,7 +56,7 @@ public:
 private:
     std::string ssid;
     std::string password;
-    bool connected = false;
+    bool isConnected = false;
 };
 
 #endif

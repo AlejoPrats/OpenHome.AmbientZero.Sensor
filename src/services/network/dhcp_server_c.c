@@ -52,7 +52,7 @@ struct dhcp_msg
 static struct udp_pcb *dhcp_pcb = NULL;
 static struct netif *dhcp_netif = NULL;
 static ip4_addr_t server_ip;
-static ip4_addr_t lease_ip; // fixed: server_ip + 1
+static ip4_addr_t lease_ip;
 
 static uint8_t get_msg_type(const struct dhcp_msg *msg, int len)
 {
