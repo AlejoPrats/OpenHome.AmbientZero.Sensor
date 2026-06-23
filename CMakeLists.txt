@@ -157,7 +157,7 @@ target_compile_definitions(ambientzero_sensor PRIVATE
     NODE_IP="10.0.0.1"
 
     HTTP_API_PORT=80
-    HTTP_API_PATH="/AmbientTemperature"
+    HTTP_API_PATH="api/AmbientTemperature"
 
     OTA_FIRMWARE_PATH="/ota/firmware.bin"
     OTA_MANIFEST_PATH="/ota/manifest.bin"
